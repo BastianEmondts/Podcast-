@@ -7,14 +7,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- Top utility bar -->
-    <div class="topbar">
-      <div class="topbar-inner">
-        <span class="topbar-item">Azure Portal</span>
-        <span class="topbar-item">Dokumentation</span>
-        <span class="topbar-item topbar-lang">DE</span>
-      </div>
-    </div>
 
     <!-- Main header / brand bar -->
     <header class="site-header">
@@ -26,11 +18,14 @@
             <span class="brand-sub">Demo</span>
           </div>
         </div>
-        <nav class="main-nav" aria-label="Hauptnavigation">
-          <a href="#" class="main-nav-item" id="nav-config" data-tab="tab-config">KONFIGURATION</a>
-          <a href="#" class="main-nav-item" id="nav-podcast" data-tab="tab-podcast">PODCAST ERZEUGEN</a>
-          <a href="#" class="main-nav-item" id="nav-logs" data-tab="tab-logs">LOGS &amp; DEBUGGING</a>
-        </nav>
+        <div class="header-actions">
+          <button class="header-btn" id="btn-config" aria-haspopup="dialog" aria-expanded="false">
+            ⚙️ <span class="header-btn-label">Einstellungen</span>
+          </button>
+          <button class="header-btn" id="btn-logs" aria-haspopup="dialog" aria-expanded="false">
+            📋 <span class="header-btn-label">Logs</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -45,174 +40,154 @@
       </div>
     </div>
 
-    <!-- Tab navigation (sub-tabs) -->
-    <div class="tab-bar-wrap">
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="tab-config">Konfiguration</button>
-        <button class="tab-btn" data-tab="tab-podcast">Podcast erzeugen</button>
-        <button class="tab-btn" data-tab="tab-logs">Logs &amp; Debugging</button>
-      </div>
-    </div>
+    <!-- Overlay backdrop -->
+    <div class="overlay-backdrop" id="overlay-backdrop" aria-hidden="true"></div>
 
+    <!-- ===== OVERLAY: Einstellungen / Konfiguration ===== -->
+    <aside class="overlay-panel" id="overlay-config" role="dialog" aria-modal="true" aria-label="Einstellungen" aria-hidden="true">
+      <div class="overlay-header">
+        <h2 class="overlay-title">Einstellungen</h2>
+        <button class="overlay-close" id="close-config" aria-label="Schließen">✕</button>
+      </div>
+      <div class="overlay-body">
+        <p class="section-desc">
+          Hinterlege deine Azure-Zugangsdaten. Die Werte werden ausschließlich
+          lokal im Browser gespeichert.
+        </p>
+
+        <form id="config-form">
+          <h3 class="card-heading">Azure OpenAI</h3>
+          <label>
+            Endpoint
+            <input id="openai-endpoint" required placeholder="https://&lt;resource&gt;.openai.azure.com" />
+          </label>
+          <label>
+            API Key
+            <input id="openai-key" type="password" required placeholder="••••••••" />
+          </label>
+          <label>
+            Deployment Name
+            <input id="openai-deployment" required placeholder="z. B. gpt-4o-mini" />
+          </label>
+          <label>
+            API Version
+            <input id="openai-version" value="2024-02-15-preview" />
+          </label>
+
+          <hr class="card-divider" />
+
+          <h3 class="card-heading">Azure Speech</h3>
+          <label>
+            Speech Key
+            <input id="speech-key" type="password" required placeholder="••••••••" />
+          </label>
+          <label>
+            Region
+            <input id="speech-region" required placeholder="z. B. westeurope" />
+          </label>
+          <label>
+            Optionaler Speech Endpoint
+            <input id="speech-endpoint" placeholder="https://&lt;region&gt;.tts.speech.microsoft.com/cognitiveservices/v1" />
+          </label>
+
+          <hr class="card-divider" />
+
+          <h3 class="card-heading">Stimmen &amp; Proxy</h3>
+          <label>
+            Stimme Speaker 1
+            <input id="voice-1" value="de-DE-KatjaNeural" />
+          </label>
+          <label>
+            Stimme Speaker 2
+            <input id="voice-2" value="de-DE-ConradNeural" />
+          </label>
+          <label>
+            URL Proxy (für CORS, nutze {url})
+            <input id="proxy-template" value="https://api.allorigins.win/raw?url={url}" />
+          </label>
+
+          <div class="overlay-info">
+            <ul class="info-list">
+              <li>API-Keys werden nur lokal im Browser-LocalStorage gespeichert – nicht auf einem Server.</li>
+              <li>Viele Websites blockieren direkte Browser-Anfragen (CORS). Nutze den Proxy-Platzhalter <code>{url}</code>.</li>
+              <li>Empfohlene Region für Azure Speech: <strong>westeurope</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Konfiguration speichern</button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <!-- ===== OVERLAY: Logs & Debugging ===== -->
+    <aside class="overlay-panel" id="overlay-logs" role="dialog" aria-modal="true" aria-label="Logs &amp; Debugging" aria-hidden="true">
+      <div class="overlay-header">
+        <h2 class="overlay-title">Logs &amp; Debugging</h2>
+        <button class="overlay-close" id="close-logs" aria-label="Schließen">✕</button>
+      </div>
+      <div class="overlay-body">
+        <p class="section-desc">
+          Alle Anfragen und Antworten zu Azure OpenAI und Azure Speech werden
+          hier protokolliert. API-Keys werden nicht geloggt.
+        </p>
+        <div class="log-toolbar">
+          <span class="log-toolbar-label">Backend-Calls (neueste zuerst)</span>
+          <button id="clear-logs-btn" type="button" class="btn-ghost">Logs leeren</button>
+        </div>
+        <div id="log-list" class="log-list">
+          <p class="hint">Noch keine Logs vorhanden.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Main content: Podcast erzeugen ===== -->
     <main class="container">
 
-      <!-- ===== TAB: Konfiguration ===== -->
-      <section class="tab-panel active" id="tab-config">
-        <div class="section-intro">
-          <h2 class="section-title">Konfiguration</h2>
-          <p class="section-desc">
-            Hinterlege deine Azure-Zugangsdaten. Die Werte werden ausschließlich
-            lokal im Browser gespeichert.
-          </p>
-        </div>
+      <div class="two-col">
+        <div class="col-main">
+          <form id="podcast-form" class="card">
+            <h3 class="card-heading">Quelle</h3>
+            <label>
+              Website URL
+              <input id="source-url" type="url" required placeholder="https://example.com" />
+            </label>
+            <div class="form-actions">
+              <button id="generate-btn" type="submit" class="btn-primary btn-large">
+                🎙️ &nbsp;Podcast erzeugen
+              </button>
+            </div>
+          </form>
 
-        <div class="two-col">
-          <div class="col-main">
-            <form id="config-form" class="card">
-              <h3 class="card-heading">Azure OpenAI</h3>
-              <label>
-                Endpoint
-                <input id="openai-endpoint" required placeholder="https://&lt;resource&gt;.openai.azure.com" />
-              </label>
-              <label>
-                API Key
-                <input id="openai-key" type="password" required placeholder="••••••••" />
-              </label>
-              <label>
-                Deployment Name
-                <input id="openai-deployment" required placeholder="z. B. gpt-4o-mini" />
-              </label>
-              <label>
-                API Version
-                <input id="openai-version" value="2024-02-15-preview" />
-              </label>
-
-              <hr class="card-divider" />
-
-              <h3 class="card-heading">Azure Speech</h3>
-              <label>
-                Speech Key
-                <input id="speech-key" type="password" required placeholder="••••••••" />
-              </label>
-              <label>
-                Region
-                <input id="speech-region" required placeholder="z. B. westeurope" />
-              </label>
-              <label>
-                Optionaler Speech Endpoint
-                <input id="speech-endpoint" placeholder="https://&lt;region&gt;.tts.speech.microsoft.com/cognitiveservices/v1" />
-              </label>
-
-              <hr class="card-divider" />
-
-              <h3 class="card-heading">Stimmen &amp; Proxy</h3>
-              <label>
-                Stimme Speaker 1
-                <input id="voice-1" value="de-DE-KatjaNeural" />
-              </label>
-              <label>
-                Stimme Speaker 2
-                <input id="voice-2" value="de-DE-ConradNeural" />
-              </label>
-              <label>
-                URL Proxy (für CORS, nutze {url})
-                <input id="proxy-template" value="https://api.allorigins.win/raw?url={url}" />
-              </label>
-
-              <div class="form-actions">
-                <button type="submit" class="btn-primary">Konfiguration speichern</button>
-              </div>
-            </form>
+          <div class="card status-card" id="status-card">
+            <h3 class="card-heading">Status</h3>
+            <div id="status" class="status">Bereit.</div>
           </div>
 
-          <aside class="col-side">
-            <div class="card info-card">
-              <h3 class="card-heading">Hinweise</h3>
-              <ul class="info-list">
-                <li>API-Keys werden nur lokal im Browser-LocalStorage gespeichert – nicht auf einem Server.</li>
-                <li>Viele Websites blockieren direkte Browser-Anfragen (CORS). Nutze den Proxy-Platzhalter <code>{url}</code>.</li>
-                <li>Empfohlene Region für Azure Speech: <strong>westeurope</strong>.</li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <!-- ===== TAB: Podcast erzeugen ===== -->
-      <section class="tab-panel" id="tab-podcast">
-        <div class="section-intro">
-          <h2 class="section-title">Podcast erzeugen</h2>
-          <p class="section-desc">
-            Gib eine Website-URL an. Der Inhalt wird geladen, per Azure OpenAI
-            als SSML-Podcast aufbereitet und anschließend mit Azure Speech synthetisiert.
-          </p>
-        </div>
-
-        <div class="two-col">
-          <div class="col-main">
-            <form id="podcast-form" class="card">
-              <h3 class="card-heading">Quelle</h3>
-              <label>
-                Website URL
-                <input id="source-url" type="url" required placeholder="https://example.com" />
-              </label>
-              <div class="form-actions">
-                <button id="generate-btn" type="submit" class="btn-primary btn-large">
-                  🎙️ &nbsp;SSML + Audio erzeugen
-                </button>
-              </div>
-            </form>
-
-            <div class="card status-card" id="status-card">
-              <h3 class="card-heading">Status</h3>
-              <div id="status" class="status">Bereit.</div>
-            </div>
-
-            <div class="card">
-              <h3 class="card-heading">Generiertes SSML</h3>
-              <textarea id="ssml-output" rows="14" readonly placeholder="Hier erscheint das SSML..."></textarea>
-            </div>
-
-            <div class="card audio-card">
-              <h3 class="card-heading">Audio</h3>
-              <audio id="audio-player" controls></audio>
-            </div>
+          <div class="card">
+            <h3 class="card-heading">Generiertes SSML</h3>
+            <textarea id="ssml-output" rows="14" readonly placeholder="Hier erscheint das SSML..."></textarea>
           </div>
 
-          <aside class="col-side">
-            <div class="card info-card">
-              <h3 class="card-heading">Ablauf</h3>
-              <ol class="step-list">
-                <li>Website-Inhalt laden (direkt oder über Proxy)</li>
-                <li>Azure OpenAI erzeugt valides SSML mit zwei Stimmen (~2 min)</li>
-                <li>Azure Speech synthetisiert das Audio-MP3</li>
-                <li>Player und SSML werden direkt angezeigt</li>
-              </ol>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <!-- ===== TAB: Logs & Debugging ===== -->
-      <section class="tab-panel" id="tab-logs">
-        <div class="section-intro">
-          <h2 class="section-title">Logs &amp; Debugging</h2>
-          <p class="section-desc">
-            Alle Anfragen und Antworten zu Azure OpenAI und Azure Speech werden
-            hier protokolliert. API-Keys werden nicht geloggt.
-          </p>
-        </div>
-
-        <div class="card">
-          <div class="log-toolbar">
-            <span class="log-toolbar-label">Backend-Calls (neueste zuerst)</span>
-            <button id="clear-logs-btn" type="button" class="btn-ghost">Logs leeren</button>
-          </div>
-          <div id="log-list" class="log-list">
-            <p class="hint">Noch keine Logs vorhanden.</p>
+          <div class="card audio-card">
+            <h3 class="card-heading">Audio</h3>
+            <audio id="audio-player" controls></audio>
           </div>
         </div>
-      </section>
+
+        <aside class="col-side">
+          <div class="card info-card">
+            <h3 class="card-heading">Ablauf</h3>
+            <ol class="step-list">
+              <li>Website-Inhalt laden (direkt oder über Proxy)</li>
+              <li>Azure OpenAI erzeugt valides SSML mit zwei Stimmen (~2 min)</li>
+              <li>Azure Speech synthetisiert das Audio-MP3</li>
+              <li>Player und SSML werden direkt angezeigt</li>
+            </ol>
+          </div>
+        </aside>
+      </div>
 
     </main>
 
