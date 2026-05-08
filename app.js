@@ -1,4 +1,6 @@
 const CONFIG_KEY = "azure-podcast-demo-config-v1";
+const MAX_SOURCE_CONTENT_LENGTH = 12000;
+const MAX_SSML_RESPONSE_TOKENS = 1700;
 
 const configForm = document.getElementById("config-form");
 const podcastForm = document.getElementById("podcast-form");
@@ -42,7 +44,8 @@ function loadConfig() {
         input.value = config[key];
       }
     }
-  } catch {
+  } catch (error) {
+    console.error("Fehler beim Laden der Konfiguration aus localStorage.", error);
     setStatus("Gespeicherte Konfiguration konnte nicht geladen werden.");
   }
 }
@@ -131,11 +134,14 @@ async function generateSsmlWithAzureOpenAI(content, config) {
       { role: "system", content: prompt },
       {
         role: "user",
-        content: `Quelle (bereinigter Text):\n${content.slice(0, 12000)}`,
+        content: `Quelle (bereinigter Text):\n${content.slice(
+          0,
+          MAX_SOURCE_CONTENT_LENGTH
+        )}`,
       },
     ],
     temperature: 0.4,
-    max_tokens: 1700,
+    max_tokens: MAX_SSML_RESPONSE_TOKENS,
   };
 
   const response = await fetch(apiUrl, {
