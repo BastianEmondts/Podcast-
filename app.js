@@ -62,6 +62,13 @@ function toLogString(payload) {
   return trimLogText(JSON.stringify(payload, null, 2));
 }
 
+function renderNoLogsPlaceholder() {
+  const placeholder = document.createElement("p");
+  placeholder.className = "hint";
+  placeholder.textContent = "Noch keine Logs vorhanden.";
+  return placeholder;
+}
+
 function appendServiceLog({
   service,
   direction,
@@ -283,13 +290,13 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     response: result,
   });
 
-  const rawContent = result?.choices?.[0]?.message?.content;
-  if (!rawContent || typeof rawContent !== "string") {
+  const aiGeneratedContent = result?.choices?.[0]?.message?.content;
+  if (!aiGeneratedContent || typeof aiGeneratedContent !== "string") {
     throw new Error("Azure OpenAI hat kein SSML zurückgegeben.");
   }
 
-  const ssmlMatch = rawContent.match(/<speak[\s\S]*<\/speak>/i);
-  return ssmlMatch ? ssmlMatch[0] : rawContent.trim();
+  const ssmlMatch = aiGeneratedContent.match(/<speak[\s\S]*<\/speak>/i);
+  return ssmlMatch ? ssmlMatch[0] : aiGeneratedContent.trim();
 }
 
 async function synthesizeAudio(ssml, config) {
@@ -357,7 +364,7 @@ configForm.addEventListener("submit", (event) => {
 });
 
 clearLogsButton.addEventListener("click", () => {
-  logList.innerHTML = '<p class="hint">Noch keine Logs vorhanden.</p>';
+  logList.replaceChildren(renderNoLogsPlaceholder());
 });
 
 podcastForm.addEventListener("submit", async (event) => {
