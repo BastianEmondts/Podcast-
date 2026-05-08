@@ -29,9 +29,36 @@ const fields = {
   sourceUrl: document.getElementById("source-url"),
 };
 
+// ── Tab switching ──────────────────────────────────────────────────────────
+
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tabPanels = document.querySelectorAll(".tab-panel");
+const navItems = document.querySelectorAll(".main-nav-item[data-tab]");
+
+function activateTab(tabId) {
+  tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabId));
+  navItems.forEach((item) => item.classList.toggle("active", item.dataset.tab === tabId));
+  tabPanels.forEach((panel) => panel.classList.toggle("active", panel.id === tabId));
+}
+
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+});
+
+navItems.forEach((item) => {
+  item.addEventListener("click", (event) => {
+    event.preventDefault();
+    activateTab(item.dataset.tab);
+  });
+});
+
+// ── Status ─────────────────────────────────────────────────────────────────
+
 function setStatus(message) {
   statusBox.textContent = message;
 }
+
+// ── Log helpers ────────────────────────────────────────────────────────────
 
 function clearInitialLogPlaceholder() {
   const onlyPlaceholder =
@@ -131,6 +158,8 @@ function appendServiceLog({
   }
 }
 
+// ── Config helpers ─────────────────────────────────────────────────────────
+
 function sanitizeEndpoint(value) {
   return value.trim().replace(/\/+$/, "");
 }
@@ -188,6 +217,8 @@ function normalizeContentToText(raw) {
     : raw;
   return text.replace(/\s+/g, " ").trim();
 }
+
+// ── Network calls ──────────────────────────────────────────────────────────
 
 async function fetchWebsiteText(url, proxyTemplate) {
   try {
@@ -356,6 +387,8 @@ function releaseAudioUrl() {
     currentAudioUrl = undefined;
   }
 }
+
+// ── Event listeners ────────────────────────────────────────────────────────
 
 configForm.addEventListener("submit", (event) => {
   event.preventDefault();
