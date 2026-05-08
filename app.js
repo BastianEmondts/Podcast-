@@ -1,6 +1,8 @@
 const CONFIG_KEY = "azure-podcast-demo-config-v1";
 const MAX_SOURCE_CONTENT_LENGTH = 12000;
 const MAX_SSML_RESPONSE_TOKENS = 1700;
+const MAX_LOG_ENTRIES = 30;
+const LOG_TEXT_PREVIEW_LENGTH = 2500;
 
 const configForm = document.getElementById("config-form");
 const podcastForm = document.getElementById("podcast-form");
@@ -8,6 +10,8 @@ const statusBox = document.getElementById("status");
 const ssmlOutput = document.getElementById("ssml-output");
 const audioPlayer = document.getElementById("audio-player");
 const generateButton = document.getElementById("generate-btn");
+const clearLogsButton = document.getElementById("clear-logs-btn");
+const logList = document.getElementById("log-list");
 
 let currentAudioUrl;
 
@@ -27,6 +31,97 @@ const fields = {
 
 function setStatus(message) {
   statusBox.textContent = message;
+}
+
+function clearInitialLogPlaceholder() {
+  const onlyPlaceholder =
+    logList.children.length === 1 &&
+    logList.firstElementChild?.classList.contains("hint");
+  if (onlyPlaceholder) {
+    logList.innerHTML = "";
+  }
+}
+
+function trimLogText(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+  if (value.length <= LOG_TEXT_PREVIEW_LENGTH) {
+    return value;
+  }
+  return `${value.slice(0, LOG_TEXT_PREVIEW_LENGTH)}… [gekürzt]`;
+}
+
+function toLogString(payload) {
+  if (payload === undefined) {
+    return "";
+  }
+  if (typeof payload === "string") {
+    return trimLogText(payload);
+  }
+  return trimLogText(JSON.stringify(payload, null, 2));
+}
+
+function appendServiceLog({
+  service,
+  direction,
+  url,
+  method,
+  status,
+  request,
+  response,
+  error,
+}) {
+  clearInitialLogPlaceholder();
+
+  const details = document.createElement("details");
+  details.className = "log-entry";
+
+  const summary = document.createElement("summary");
+  const statusPart = status ? ` · HTTP ${status}` : "";
+  const errorPart = error ? " · Fehler" : "";
+  summary.textContent = `${new Date().toLocaleTimeString()} · ${service} · ${direction}${statusPart}${errorPart}`;
+  details.append(summary);
+
+  const meta = document.createElement("div");
+  meta.className = "log-meta";
+  meta.textContent = `${method} ${url}`;
+  details.append(meta);
+
+  if (request !== undefined) {
+    const reqTitle = document.createElement("strong");
+    reqTitle.textContent = "Request";
+    details.append(reqTitle);
+
+    const reqBody = document.createElement("pre");
+    reqBody.textContent = toLogString(request);
+    details.append(reqBody);
+  }
+
+  if (response !== undefined) {
+    const resTitle = document.createElement("strong");
+    resTitle.textContent = "Response";
+    details.append(resTitle);
+
+    const resBody = document.createElement("pre");
+    resBody.textContent = toLogString(response);
+    details.append(resBody);
+  }
+
+  if (error) {
+    const errTitle = document.createElement("strong");
+    errTitle.textContent = "Error";
+    details.append(errTitle);
+
+    const errBody = document.createElement("pre");
+    errBody.textContent = error;
+    details.append(errBody);
+  }
+
+  logList.prepend(details);
+  while (logList.children.length > MAX_LOG_ENTRIES) {
+    logList.removeChild(logList.lastElementChild);
+  }
 }
 
 function sanitizeEndpoint(value) {
@@ -144,6 +239,15 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     max_tokens: MAX_SSML_RESPONSE_TOKENS,
   };
 
+  const requestPayloadForLog = {
+    ...body,
+    messages: body.messages.map((message) =>
+      message.role === "user"
+        ? { ...message, content: trimLogText(message.content) }
+        : message
+    ),
+  };
+
   const response = await fetch(apiUrl, {
     method: "POST",
     headers: {
@@ -155,10 +259,30 @@ async function generateSsmlWithAzureOpenAI(content, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    appendServiceLog({
+      service: "Azure OpenAI",
+      direction: "request/response",
+      url: apiUrl,
+      method: "POST",
+      status: response.status,
+      request: requestPayloadForLog,
+      response: trimLogText(errorText),
+      error: `Azure OpenAI Fehler (${response.status})`,
+    });
     throw new Error(`Azure OpenAI Fehler (${response.status}): ${errorText}`);
   }
 
   const result = await response.json();
+  appendServiceLog({
+    service: "Azure OpenAI",
+    direction: "request/response",
+    url: apiUrl,
+    method: "POST",
+    status: response.status,
+    request: requestPayloadForLog,
+    response: result,
+  });
+
   const rawContent = result?.choices?.[0]?.message?.content;
   if (!rawContent || typeof rawContent !== "string") {
     throw new Error("Azure OpenAI hat kein SSML zurückgegeben.");
@@ -173,6 +297,11 @@ async function synthesizeAudio(ssml, config) {
     config.speechEndpoint ||
     `https://${config.speechRegion}.tts.speech.microsoft.com/cognitiveservices/v1`;
 
+  const requestPayloadForLog = {
+    outputFormat: "audio-24khz-96kbitrate-mono-mp3",
+    ssmlPreview: trimLogText(ssml),
+  };
+
   const response = await fetch(speechEndpoint, {
     method: "POST",
     headers: {
@@ -185,10 +314,33 @@ async function synthesizeAudio(ssml, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    appendServiceLog({
+      service: "Azure Speech",
+      direction: "request/response",
+      url: speechEndpoint,
+      method: "POST",
+      status: response.status,
+      request: requestPayloadForLog,
+      response: trimLogText(errorText),
+      error: `Azure Speech Fehler (${response.status})`,
+    });
     throw new Error(`Azure Speech Fehler (${response.status}): ${errorText}`);
   }
 
-  return await response.blob();
+  const audioBlob = await response.blob();
+  appendServiceLog({
+    service: "Azure Speech",
+    direction: "request/response",
+    url: speechEndpoint,
+    method: "POST",
+    status: response.status,
+    request: requestPayloadForLog,
+    response: {
+      type: audioBlob.type || "audio/mpeg",
+      sizeBytes: audioBlob.size,
+    },
+  });
+  return audioBlob;
 }
 
 function releaseAudioUrl() {
@@ -202,6 +354,10 @@ configForm.addEventListener("submit", (event) => {
   event.preventDefault();
   saveConfig(readConfig());
   setStatus("Konfiguration lokal gespeichert.");
+});
+
+clearLogsButton.addEventListener("click", () => {
+  logList.innerHTML = '<p class="hint">Noch keine Logs vorhanden.</p>';
 });
 
 podcastForm.addEventListener("submit", async (event) => {

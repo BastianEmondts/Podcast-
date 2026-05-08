@@ -59,6 +59,19 @@
           </label>
           <button type="submit">Konfiguration speichern (lokal im Browser)</button>
         </form>
+        <div class="card">
+          <h3 class="subheading">Debug Logging (Anfragen / Antworten)</h3>
+          <p class="hint">
+            Für Fehlersuche: Backend-Calls zu Azure OpenAI und Azure Speech inkl.
+            Responses (API-Keys werden nicht geloggt).
+          </p>
+          <div class="log-actions">
+            <button id="clear-logs-btn" type="button">Logs leeren</button>
+          </div>
+          <div id="log-list" class="log-list">
+            <p class="hint">Noch keine Logs vorhanden.</p>
+          </div>
+        </div>
       </section>
 
       <section>
