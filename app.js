@@ -295,7 +295,7 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     throw new Error("Azure OpenAI hat kein SSML zurückgegeben.");
   }
 
-  const ssmlMatch = aiGeneratedContent.match(/<speak[\s\S]*<\/speak>/i);
+  const ssmlMatch = aiGeneratedContent.match(/<speak[\s\S]*?<\/speak>/i);
   return ssmlMatch ? ssmlMatch[0] : aiGeneratedContent.trim();
 }
 
