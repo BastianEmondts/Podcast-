@@ -29,27 +29,59 @@ const fields = {
   sourceUrl: document.getElementById("source-url"),
 };
 
-// ── Tab switching ──────────────────────────────────────────────────────────
+// ── Overlay panels ─────────────────────────────────────────────────────────
 
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabPanels = document.querySelectorAll(".tab-panel");
-const navItems = document.querySelectorAll(".main-nav-item[data-tab]");
+const backdrop = document.getElementById("overlay-backdrop");
+const overlayConfig = document.getElementById("overlay-config");
+const overlayLogs = document.getElementById("overlay-logs");
+const btnConfig = document.getElementById("btn-config");
+const btnLogs = document.getElementById("btn-logs");
+const closeConfig = document.getElementById("close-config");
+const closeLogs = document.getElementById("close-logs");
 
-function activateTab(tabId) {
-  tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabId));
-  navItems.forEach((item) => item.classList.toggle("active", item.dataset.tab === tabId));
-  tabPanels.forEach((panel) => panel.classList.toggle("active", panel.id === tabId));
+function openOverlay(panel, triggerBtn) {
+  closeAllOverlays();
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+  backdrop.classList.add("open");
+  backdrop.setAttribute("aria-hidden", "false");
+  if (triggerBtn) triggerBtn.setAttribute("aria-expanded", "true");
+  document.body.style.overflow = "hidden";
 }
 
-tabButtons.forEach((btn) => {
-  btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+function closeAllOverlays() {
+  [overlayConfig, overlayLogs].forEach((p) => {
+    p.classList.remove("open");
+    p.setAttribute("aria-hidden", "true");
+  });
+  [btnConfig, btnLogs].forEach((b) => b.setAttribute("aria-expanded", "false"));
+  backdrop.classList.remove("open");
+  backdrop.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+btnConfig.addEventListener("click", () => {
+  if (overlayConfig.classList.contains("open")) {
+    closeAllOverlays();
+  } else {
+    openOverlay(overlayConfig, btnConfig);
+  }
 });
 
-navItems.forEach((item) => {
-  item.addEventListener("click", (event) => {
-    event.preventDefault();
-    activateTab(item.dataset.tab);
-  });
+btnLogs.addEventListener("click", () => {
+  if (overlayLogs.classList.contains("open")) {
+    closeAllOverlays();
+  } else {
+    openOverlay(overlayLogs, btnLogs);
+  }
+});
+
+closeConfig.addEventListener("click", closeAllOverlays);
+closeLogs.addEventListener("click", closeAllOverlays);
+backdrop.addEventListener("click", closeAllOverlays);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAllOverlays();
 });
 
 // ── Status ─────────────────────────────────────────────────────────────────
@@ -394,6 +426,7 @@ configForm.addEventListener("submit", (event) => {
   event.preventDefault();
   saveConfig(readConfig());
   setStatus("Konfiguration lokal gespeichert.");
+  closeAllOverlays();
 });
 
 clearLogsButton.addEventListener("click", () => {
