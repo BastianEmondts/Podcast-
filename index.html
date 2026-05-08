@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azure Podcast Demo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Azure Podcast Demo</h1>
+      <p>
+        Übergib eine URL und erzeuge daraus einen 2-minütigen Podcast mit zwei
+        Speakern (SSML + Audio).
+      </p>
+
+      <section>
+        <h2>Konfiguration</h2>
+        <form id="config-form" class="card">
+          <label>
+            Azure OpenAI Endpoint
+            <input id="openai-endpoint" required placeholder="https://<resource>.openai.azure.com" />
+          </label>
+          <label>
+            Azure OpenAI API Key
+            <input id="openai-key" type="password" required />
+          </label>
+          <label>
+            Azure OpenAI Deployment Name
+            <input id="openai-deployment" required placeholder="z. B. gpt-4o-mini" />
+          </label>
+          <label>
+            Azure OpenAI API Version
+            <input id="openai-version" value="2024-02-15-preview" />
+          </label>
+          <label>
+            Azure Speech Key
+            <input id="speech-key" type="password" required />
+          </label>
+          <label>
+            Azure Speech Region
+            <input id="speech-region" required placeholder="z. B. westeurope" />
+          </label>
+          <label>
+            Optional: Azure Speech Endpoint
+            <input id="speech-endpoint" placeholder="https://<region>.tts.speech.microsoft.com/cognitiveservices/v1" />
+          </label>
+          <label>
+            Stimme Speaker 1
+            <input id="voice-1" value="de-DE-KatjaNeural" />
+          </label>
+          <label>
+            Stimme Speaker 2
+            <input id="voice-2" value="de-DE-ConradNeural" />
+          </label>
+          <label>
+            URL Proxy (für CORS, nutze {url})
+            <input id="proxy-template" value="https://api.allorigins.win/raw?url={url}" />
+          </label>
+          <button type="submit">Konfiguration speichern (lokal im Browser)</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Podcast erzeugen</h2>
+        <form id="podcast-form" class="card">
+          <label>
+            Website URL
+            <input id="source-url" type="url" required placeholder="https://example.com" />
+          </label>
+          <button id="generate-btn" type="submit">SSML + Audio erzeugen</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Status</h2>
+        <div id="status" class="status">Bereit.</div>
+      </section>
+
+      <section>
+        <h2>Generiertes SSML</h2>
+        <textarea id="ssml-output" rows="14" readonly placeholder="Hier erscheint das SSML..."></textarea>
+      </section>
+
+      <section>
+        <h2>Audio</h2>
+        <audio id="audio-player" controls></audio>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
