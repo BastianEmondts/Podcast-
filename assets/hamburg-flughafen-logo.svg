@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 70" role="img" aria-label="Hamburg Flughafen">
+  <text
+    x="0"
+    y="28"
+    fill="#E2001A"
+    font-size="19"
+    font-weight="700"
+    font-family="Arial, Helvetica, sans-serif"
+  >
+    Hamburg Flughafen
+  </text>
+  <path
+    d="M18 38c-5 5-8 12-8 18 0 8 7 13 18 13 18 0 37-10 59-28"
+    fill="none"
+    stroke="#0f65b6"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+  <path
+    d="M72 18l18-7-9 13 15 5-5 6-14-2 2 12-7 4-3-14-12 1 5-7 10-3z"
+    fill="#0f65b6"
+  />
+</svg>
