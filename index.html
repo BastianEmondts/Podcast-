@@ -88,6 +88,7 @@
           <label>
             Optionaler Speech Endpoint
             <input id="speech-endpoint" placeholder="https://&lt;region&gt;.tts.speech.microsoft.com/cognitiveservices/v1" />
+            <small class="field-hint">Leer lassen für Standard-Endpoint. Wenn du nur den Basis-Host angibst (z.&nbsp;B. <code>https://&lt;region&gt;.api.cognitive.microsoft.com</code>), wird <code>/cognitiveservices/v1</code> automatisch ergänzt.</small>
           </label>
 
           <hr class="card-divider" />
@@ -110,7 +111,7 @@
             <ul class="info-list">
               <li>API-Keys werden nur lokal im Browser-LocalStorage gespeichert – nicht auf einem Server.</li>
               <li>Viele Websites blockieren direkte Browser-Anfragen (CORS). Nutze den Proxy-Platzhalter <code>{url}</code>.</li>
-              <li>Empfohlene Region für Azure Speech: <strong>westeurope</strong>.</li>
+              <li>Empfohlener Endpoint-Typ für Azure Speech: <code>https://&lt;region&gt;.tts.speech.microsoft.com/cognitiveservices/v1</code>. Das Feld kann auch leer gelassen werden – dann wird der Standard-TTS-Endpoint aus der Region berechnet.</li>
             </ul>
           </div>
 

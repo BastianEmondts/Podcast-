@@ -318,14 +318,27 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     ),
   };
 
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": config.openaiKey,
-    },
-    body: JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": config.openaiKey,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (networkError) {
+    appendServiceLog({
+      service: "Azure OpenAI",
+      direction: "request/response",
+      url: apiUrl,
+      method: "POST",
+      request: requestPayloadForLog,
+      error: `Netzwerkfehler: ${networkError.message}`,
+    });
+    throw networkError;
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -362,25 +375,59 @@ async function generateSsmlWithAzureOpenAI(content, config) {
   return ssmlMatch ? ssmlMatch[0] : aiGeneratedContent.trim();
 }
 
+function buildSpeechEndpoint(endpoint, region) {
+  if (!endpoint) {
+    return `https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+  }
+  try {
+    const url = new URL(endpoint);
+    if (url.pathname === "/" || url.pathname === "") {
+      return `${endpoint}/cognitiveservices/v1`;
+    }
+  } catch {
+    // Invalid URL – use as-is and let the fetch surface the error
+  }
+  return endpoint;
+}
+
 async function synthesizeAudio(ssml, config) {
-  const speechEndpoint =
-    config.speechEndpoint ||
-    `https://${config.speechRegion}.tts.speech.microsoft.com/cognitiveservices/v1`;
+  const speechEndpoint = buildSpeechEndpoint(
+    config.speechEndpoint,
+    config.speechRegion
+  );
 
   const requestPayloadForLog = {
+    endpoint: speechEndpoint,
     outputFormat: "audio-24khz-96kbitrate-mono-mp3",
     ssmlPreview: trimLogText(ssml),
   };
 
-  const response = await fetch(speechEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/ssml+xml",
-      "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
-      "Ocp-Apim-Subscription-Key": config.speechKey,
-    },
-    body: ssml,
-  });
+  let response;
+  try {
+    response = await fetch(speechEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/ssml+xml",
+        "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
+        "Ocp-Apim-Subscription-Key": config.speechKey,
+      },
+      body: ssml,
+    });
+  } catch (networkError) {
+    appendServiceLog({
+      service: "Azure Speech",
+      direction: "request/response",
+      url: speechEndpoint,
+      method: "POST",
+      request: requestPayloadForLog,
+      error: `Netzwerkfehler (CORS oder Verbindungsproblem): ${networkError.message}`,
+    });
+    throw new Error(
+      `Azure Speech Netzwerkfehler: ${networkError.message}. ` +
+        `Prüfe die Endpoint-URL (${speechEndpoint}) und ob der Azure Speech Service ` +
+        `CORS-Anfragen aus dem Browser erlaubt.`
+    );
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
