@@ -121,6 +121,17 @@ function toLogString(payload) {
   return trimLogText(JSON.stringify(payload, null, 2));
 }
 
+function toHeaderLogObject(headers) {
+  const headerEntries = Array.from(headers.entries());
+  if (headerEntries.length === 0) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    headerEntries.map(([name, value]) => [name, trimLogText(value)])
+  );
+}
+
 function renderNoLogsPlaceholder() {
   const placeholder = document.createElement("p");
   placeholder.className = "hint";
@@ -432,6 +443,13 @@ async function synthesizeAudio(ssml, config) {
 
   const requestPayloadForLog = {
     endpoint: speechEndpoint,
+    configuredRegion: config.speechRegion,
+    configuredCustomEndpoint:
+      config.speechEndpoint || "(Standard-Endpoint aus der Region)",
+    requestHeaders: {
+      "Content-Type": "application/ssml+xml",
+      "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
+    },
     outputFormat: "audio-24khz-96kbitrate-mono-mp3",
     ssmlPreview: trimLogText(ssml),
   };
@@ -465,6 +483,22 @@ async function synthesizeAudio(ssml, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    const responsePayloadForLog = {
+      statusText: response.statusText || "[kein Status-Text]",
+      headers: toHeaderLogObject(response.headers),
+      body: errorText ? trimLogText(errorText) : "[leerer Response-Body]",
+    };
+    const troubleshootingHints = [];
+    if (response.status === 400) {
+      troubleshootingHints.push(
+        "HTTP 400 bei Azure Speech wird meist durch ungültiges SSML oder einen falschen Speech-Endpoint verursacht."
+      );
+      if (!errorText) {
+        troubleshootingHints.push(
+          "Der Service hat keinen Response-Body geliefert; nutze deshalb die geloggten Response-Header (z. B. Request-IDs) für die Azure-Fehlersuche."
+        );
+      }
+    }
     appendServiceLog({
       service: "Azure Speech",
       direction: "request/response",
@@ -472,10 +506,18 @@ async function synthesizeAudio(ssml, config) {
       method: "POST",
       status: response.status,
       request: requestPayloadForLog,
-      response: trimLogText(errorText),
+      response: responsePayloadForLog,
       error: `Azure Speech Fehler (${response.status})`,
     });
-    throw new Error(`Azure Speech Fehler (${response.status}): ${errorText}`);
+    throw new Error(
+      [
+        `Azure Speech Fehler (${response.status})${response.statusText ? ` ${response.statusText}` : ""}.`,
+        errorText
+          ? `Antwort: ${trimLogText(errorText)}`
+          : "Der Response-Body war leer. Bitte prüfe die Debug-Logs für Header und Request-Details.",
+        ...troubleshootingHints,
+      ].join(" ")
+    );
   }
 
   const audioBlob = await response.blob();
