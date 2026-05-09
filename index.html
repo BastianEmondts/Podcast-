@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Azure Podcast Demo</title>
+    <title>Hamburg Flughafen Podcast Center</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,13 +11,18 @@
     <!-- Main header / brand bar -->
     <header class="site-header">
       <div class="site-header-inner">
-        <div class="brand">
-          <span class="brand-icon" aria-hidden="true">🎙️</span>
+        <a class="brand" href="#top" aria-label="Hamburg Flughafen Podcast Center">
+          <span class="brand-logo" aria-hidden="true"></span>
           <div class="brand-text">
-            <span class="brand-name">Azure Podcast</span>
-            <span class="brand-sub">Demo</span>
+            <span class="brand-name">Hamburg Flughafen</span>
+            <span class="brand-sub">Podcast Center</span>
           </div>
-        </div>
+        </a>
+        <nav class="site-nav" aria-label="Hauptnavigation">
+          <a href="#intro">Podcast Center</a>
+          <a href="#workflow">Ablauf</a>
+          <a href="#podcast-form">Erstellen</a>
+        </nav>
         <div class="header-actions">
           <button class="header-btn" id="btn-config" aria-haspopup="dialog" aria-expanded="false">
             ⚙️ <span class="header-btn-label">Einstellungen</span>
@@ -32,11 +37,45 @@
     <!-- Hero banner -->
     <div class="hero">
       <div class="hero-inner">
-        <h1 class="hero-title">Podcast Generator</h1>
-        <p class="hero-subtitle">
-          Übergib eine URL und erzeuge daraus einen 2-minütigen Podcast mit zwei
-          Speakern – direkt im Browser mit Azure KI.
-        </p>
+        <section class="hero-showcase" id="top">
+          <div class="hero-media" aria-hidden="true">
+            <span class="hero-media-badge">Flughafen Hamburg Podcast</span>
+            <span class="hero-media-caption">Hamburg Flughafen Podcast Center</span>
+          </div>
+          <div class="hero-copy">
+            <p class="hero-eyebrow">Hamburg Flughafen Podcast Center</p>
+            <h1 class="hero-title">Podcast-Erstellung im Hamburg-Airport-Look</h1>
+            <p class="hero-subtitle">
+              Übergib eine URL und erzeuge daraus einen rund 2-minütigen Podcast
+              mit zwei Speakern – direkt im Browser und visuell angelehnt an das
+              Erscheinungsbild des Hamburg Airport.
+            </p>
+            <div class="hero-highlights">
+              <span>2 Sprecher</span>
+              <span>Direktes SSML</span>
+              <span>Audio im Browser</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="intro-grid" id="intro" aria-label="Einführung">
+          <article class="card feature-card">
+            <h2 class="feature-title">Klarer Fokus auf den Flughafen Hamburg Podcast</h2>
+            <p class="feature-text">
+              Die Oberfläche bündelt Konfiguration, SSML und Audio in einem
+              aufgeräumten Layout und stellt den Flughafen Hamburg Podcast
+              deutlich in den Mittelpunkt.
+            </p>
+          </article>
+          <article class="card feature-card">
+            <h2 class="feature-title">Kurzer Weg von der Quelle zum Audio</h2>
+            <p class="feature-text">
+              Eine Website-URL genügt, um den Inhalt zusammenzufassen, valides
+              SSML zu erzeugen und das Ergebnis anschließend direkt als Audio
+              abzuspielen.
+            </p>
+          </article>
+        </section>
       </div>
     </div>
 
@@ -145,6 +184,14 @@
 
     <!-- ===== Main content: Podcast erzeugen ===== -->
     <main class="container">
+      <section class="section-intro">
+        <p class="section-kicker">Flughafen Hamburg Podcast</p>
+        <h2 class="section-title">Podcast erstellen</h2>
+        <p class="section-copy">
+          Nutze die bestehende Funktionalität wie gewohnt – jetzt in einem
+          Layout, das sich stärker am Hamburg-Airport-Auftritt orientiert.
+        </p>
+      </section>
 
       <div class="two-col">
         <div class="col-main">
@@ -177,7 +224,7 @@
           </div>
         </div>
 
-        <aside class="col-side">
+        <aside class="col-side" id="workflow">
           <div class="card info-card">
             <h3 class="card-heading">Ablauf</h3>
             <ol class="step-list">
@@ -194,7 +241,7 @@
 
     <footer class="site-footer">
       <div class="site-footer-inner">
-        <span>Azure Podcast Demo – statische Webanwendung für GitHub Pages</span>
+        <span>Hamburg Flughafen Podcast Center – statische Webanwendung für GitHub Pages</span>
       </div>
     </footer>
 
