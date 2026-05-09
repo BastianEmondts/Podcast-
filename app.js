@@ -290,7 +290,8 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     "- Format: Podcast mit zwei Speakern, die sich abwechseln",
     `- Verwende für Speaker 1 die Stimme ${config.voice1}`,
     `- Verwende für Speaker 2 die Stimme ${config.voice2}`,
-    "- Verwende ein <speak>-Root Element und nur SSML ohne zusätzlichen Text.",
+    `- Das <speak>-Root-Element muss die Attribute version="1.0", xml:lang und xmlns="http://www.w3.org/2001/10/synthesis" enthalten, z. B.: <speak version="1.0" xml:lang="de-DE" xmlns="http://www.w3.org/2001/10/synthesis">`,
+    "- Schreibe nur valides SSML ohne zusätzlichen Text oder Markdown.",
     "- Inhalt muss die wichtigsten Punkte aus der Quelle verständlich zusammenfassen.",
   ].join("\n");
 
@@ -373,6 +374,39 @@ async function generateSsmlWithAzureOpenAI(content, config) {
 
   const ssmlMatch = aiGeneratedContent.match(/<speak[\s\S]*?<\/speak>/i);
   return ssmlMatch ? ssmlMatch[0] : aiGeneratedContent.trim();
+}
+
+function normalizeSsml(ssml, lang) {
+  // Azure TTS requires version, xml:lang and xmlns on the <speak> root element.
+  // If the AI omits any of them the service returns HTTP 400, so we inject them
+  // as a post-processing safety net.
+  return ssml.replace(/<speak(\b[^>]*)>/i, (_match, existingAttrs) => {
+    let attrs = existingAttrs || "";
+    if (!/\bversion\s*=/.test(attrs)) {
+      attrs += ' version="1.0"';
+    }
+    if (!/\bxml:lang\s*=/.test(attrs)) {
+      attrs += ` xml:lang="${lang}"`;
+    }
+    if (!/\bxmlns\s*=/.test(attrs)) {
+      attrs += ' xmlns="http://www.w3.org/2001/10/synthesis"';
+    }
+    return `<speak${attrs}>`;
+  });
+}
+
+/**
+ * Extract the BCP-47 locale prefix from an Azure TTS voice name.
+ * Azure voice names follow the pattern "<language>-<region>-<VoiceName>Neural",
+ * e.g. "de-DE-KatjaNeural" → "de-DE".  Falls back to "de-DE" when the name
+ * does not match the expected format.
+ *
+ * @param {string} voiceName
+ * @returns {string}
+ */
+function localeFromVoiceName(voiceName) {
+  const match = voiceName.match(/^([a-z]{2}-[A-Z]{2})\b/i);
+  return match ? match[1] : "de-DE";
 }
 
 function buildSpeechEndpoint(endpoint, region) {
@@ -514,7 +548,8 @@ podcastForm.addEventListener("submit", async (event) => {
     }
 
     setStatus("Erzeuge SSML mit Azure OpenAI...");
-    const ssml = await generateSsmlWithAzureOpenAI(websiteText, config);
+    const rawSsml = await generateSsmlWithAzureOpenAI(websiteText, config);
+    const ssml = normalizeSsml(rawSsml, localeFromVoiceName(config.voice1));
     ssmlOutput.value = ssml;
 
     setStatus("Erzeuge Audio mit Azure Speech...");
