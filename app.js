@@ -381,7 +381,7 @@ function buildSpeechEndpoint(endpoint, region) {
   }
   try {
     const url = new URL(endpoint);
-    if (url.pathname === "/" || url.pathname === "") {
+    if (url.pathname === "/") {
       return `${endpoint}/cognitiveservices/v1`;
     }
   } catch {
