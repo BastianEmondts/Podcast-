@@ -322,6 +322,21 @@ textarea {
   transition: border-color .15s, box-shadow .15s;
   width: 100%;
 }
+.field-hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.field-hint code {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 0.85em;
+}
+
 input:focus,
 textarea:focus {
   outline: none;
