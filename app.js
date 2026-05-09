@@ -444,7 +444,7 @@ async function synthesizeAudio(ssml, config) {
   const requestPayloadForLog = {
     endpoint: speechEndpoint,
     configuredRegion: config.speechRegion,
-    configuredCustomEndpoint: config.speechEndpoint || "(Standard aus Region)",
+    configuredCustomEndpoint: config.speechEndpoint || "(Standard aus der Region)",
     requestHeaders: {
       "Content-Type": "application/ssml+xml",
       "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
@@ -494,7 +494,7 @@ async function synthesizeAudio(ssml, config) {
       );
       if (!errorText) {
         troubleshootingHints.push(
-          "Der Service hat keinen Response-Body geliefert; nutze deshalb die geloggten Response-Header (z. B. request IDs) für die Azure-Fehlersuche."
+          "Der Service hat keinen Response-Body geliefert; nutze deshalb die geloggten Response-Header (z. B. Request-IDs) für die Azure-Fehlersuche."
         );
       }
     }
