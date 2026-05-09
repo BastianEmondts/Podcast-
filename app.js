@@ -444,7 +444,7 @@ async function synthesizeAudio(ssml, config) {
   const requestPayloadForLog = {
     endpoint: speechEndpoint,
     configuredRegion: config.speechRegion,
-    configuredCustomEndpoint: config.speechEndpoint || "(Standard aus der Region)",
+    configuredCustomEndpoint: config.speechEndpoint || "(aus Region berechnet)",
     requestHeaders: {
       "Content-Type": "application/ssml+xml",
       "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
@@ -483,14 +483,14 @@ async function synthesizeAudio(ssml, config) {
   if (!response.ok) {
     const errorText = await response.text();
     const responsePayloadForLog = {
-      statusText: response.statusText || "(leer)",
+      statusText: response.statusText || "[kein Status-Text]",
       headers: toHeaderLogObject(response.headers),
       body: errorText ? trimLogText(errorText) : "[leerer Response-Body]",
     };
     const troubleshootingHints = [];
     if (response.status === 400) {
       troubleshootingHints.push(
-        "HTTP 400 bei Azure Speech bedeutet meist ungültiges SSML oder einen unpassenden Speech-Endpoint."
+        "HTTP 400 bei Azure Speech bedeutet meist ungültiges SSML oder einen falschen Speech-Endpoint."
       );
       if (!errorText) {
         troubleshootingHints.push(
