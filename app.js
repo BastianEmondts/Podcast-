@@ -299,6 +299,7 @@ async function generateSsmlWithAzureOpenAI(content, config) {
     "- Sprache: Deutsch",
     "- Dauer: etwa 2 Minuten",
     "- Format: Podcast mit zwei Speakern, die sich abwechseln",
+    '- Wenn der Podcast im Text benannt wird, nenne ihn ausschließlich "Flughafen Hamburg Podcast".',
     `- Verwende für Speaker 1 die Stimme ${config.voice1}`,
     `- Verwende für Speaker 2 die Stimme ${config.voice2}`,
     `- Das <speak>-Root-Element muss die Attribute version="1.0", xml:lang und xmlns="http://www.w3.org/2001/10/synthesis" enthalten, z. B.: <speak version="1.0" xml:lang="de-DE" xmlns="http://www.w3.org/2001/10/synthesis">`,
